@@ -1,5 +1,5 @@
 from typing import List, Optional, Dict
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, ConfigDict
 
 class ApplicationInfo(BaseModel):
     appName: str
@@ -51,13 +51,28 @@ class ParameterQuantity(BaseModel):
     unit: str = "none"
     symbol: str = ""
 
+class CamExpressionRelation(BaseModel):
+    target: str
+    expression: str
+
 class CamParameter(BaseModel):
     name: str
     title: str
     description: Optional[str] = None
-    baseParam: Optional[str] = None
+    baseParam: Optional[str] = Field(None, alias="base_param")
     category: Optional[str] = None
+    
+    type: str = "numeric"
+    ancestors: List[str] = []
+    
+    defaultValue: Optional[CamExpressionRelation] = Field(None, alias="default_value")
+    minThreshold: Optional[CamExpressionRelation] = Field(None, alias="min_threshold")
+    maxThreshold: Optional[CamExpressionRelation] = Field(None, alias="max_threshold")
+    enabledCondition: Optional[CamExpressionRelation] = Field(None, alias="enabled_condition")
+
     quantity: Optional[ParameterQuantity] = None
+
+    model_config = ConfigDict(populate_by_name=True)
 
 class CamCategory(BaseModel):
     name: str
