@@ -93,23 +93,31 @@ class PluginService:
         with open(schema_path, 'r') as f:
             return PluginSchema(**json.load(f))
 
-    def get_adapter_path(self, plugin_id: str) -> Optional[Path]:
-        logger.info(f"Fetching adapter for plugin: {plugin_id}")
+    def get_adapter_path(self, plugin_id: str, schema_id: Optional[str] = None) -> Optional[Path]:
+        logger.info(f"Fetching adapter for plugin: {plugin_id} (schema: {schema_id})")
         plugin_path = self.get_plugin_path(plugin_id)
         if not plugin_path:
             return None
         
+        # If schema_id is provided, try to find the adapter in that schema's folder first
+        if schema_id:
+            adapter_path = plugin_path / "schemas" / schema_id / "adapter.js"
+            if adapter_path.exists():
+                return adapter_path
+        
+        # Fallback to root adapter.js
         adapter_path = plugin_path / "adapter.js"
         if adapter_path.exists():
             return adapter_path
         
-        # Search in schemas if not in root
-        schemas_dir = plugin_path / "schemas"
-        if schemas_dir.exists():
-            for schema_id in os.listdir(schemas_dir):
-                s_path = schemas_dir / schema_id / "adapter.js"
-                if s_path.exists():
-                    return s_path
+        # Last resort: search in all schemas if schema_id was not provided
+        if not schema_id:
+            schemas_dir = plugin_path / "schemas"
+            if schemas_dir.exists():
+                for sid in os.listdir(schemas_dir):
+                    s_path = schemas_dir / sid / "adapter.js"
+                    if s_path.exists():
+                        return s_path
         
         logger.info(f"No adapter.js found for plugin: {plugin_id}")
         return None

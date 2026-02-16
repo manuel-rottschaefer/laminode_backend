@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import FileResponse
-from typing import List
+from typing import List, Optional
 from ....services.plugin_service import plugin_service
 from ....models.plugin_models import PluginManifest, PluginSchema
 from ....core.logging_config import logger
@@ -36,11 +36,12 @@ async def get_plugin_schema(plugin_id: str, schema_id: str):
     return schema
 
 @router.get("/{plugin_id}/adapter", response_class=FileResponse)
-async def get_plugin_adapter(plugin_id: str):
+async def get_plugin_adapter(plugin_id: str, schema_id: Optional[str] = None):
     """
     Returns the adapter.js file for a specific plugin.
+    Optional schema_id can be provided to get the adapter for a specific schema version.
     """
-    adapter_path = plugin_service.get_adapter_path(plugin_id)
+    adapter_path = plugin_service.get_adapter_path(plugin_id, schema_id)
     if not adapter_path:
         raise HTTPException(status_code=404, detail="Adapter file not found")
     

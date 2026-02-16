@@ -78,6 +78,7 @@ class CamCategory(BaseModel):
     name: str
     title: str
     color: str
+    role: str = "buildJob"
 
 class PluginSchema(BaseModel):
     manifest: SchemaManifest
