@@ -47,9 +47,10 @@ class SchemaManifest(BaseModel):
     targetAppSector: Optional[str] = None
 
 class ParameterQuantity(BaseModel):
-    name: str = "generic"
-    unit: str = "none"
-    symbol: str = ""
+    type: str
+    unit: Optional[str] = None
+    symbol: Optional[str] = None
+    options: Optional[List[str]] = None
 
 class CamExpressionRelation(BaseModel):
     target: str
@@ -59,20 +60,17 @@ class CamParameter(BaseModel):
     name: str
     title: str
     description: Optional[str] = None
-    baseParam: Optional[str] = Field(None, alias="base_param")
+    baseParam: Optional[str] = None
     category: Optional[str] = None
     
-    type: str = "numeric"
     ancestors: List[str] = []
     
-    defaultValue: Optional[CamExpressionRelation] = Field(None, alias="default_value")
-    minThreshold: Optional[CamExpressionRelation] = Field(None, alias="min_threshold")
-    maxThreshold: Optional[CamExpressionRelation] = Field(None, alias="max_threshold")
-    enabledCondition: Optional[CamExpressionRelation] = Field(None, alias="enabled_condition")
+    defaultValue: Optional[CamExpressionRelation] = None
+    minThreshold: Optional[CamExpressionRelation] = None
+    maxThreshold: Optional[CamExpressionRelation] = None
+    enabledCondition: Optional[CamExpressionRelation] = None
 
-    quantity: Optional[ParameterQuantity] = None
-
-    model_config = ConfigDict(populate_by_name=True)
+    quantity: ParameterQuantity
 
 class CamCategory(BaseModel):
     name: str

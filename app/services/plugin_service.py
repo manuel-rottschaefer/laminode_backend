@@ -85,9 +85,15 @@ class PluginService:
         if not plugin_path:
             return None
         
-        schema_path = plugin_path / "schemas" / schema_id / "schema.json"
+        # Try both 'schema.json' and 'generated_schema.json'
+        base_path = plugin_path / "schemas" / schema_id
+        schema_path = base_path / "schema.json"
+        
         if not schema_path.exists():
-            logger.warning(f"Schema file not found: {schema_path}")
+            schema_path = base_path / "generated_schema.json"
+            
+        if not schema_path.exists():
+            logger.warning(f"Schema file not found in {base_path}")
             return None
             
         with open(schema_path, 'r') as f:

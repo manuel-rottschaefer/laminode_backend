@@ -25,7 +25,7 @@ async def get_plugin_manifest(plugin_id: str):
         raise HTTPException(status_code=404, detail="Plugin not found")
     return manifest
 
-@router.get("/{plugin_id}/schemas/{schema_id}", response_model=PluginSchema)
+@router.get("/{plugin_id}/schemas/{schema_id}", response_model=PluginSchema, response_model_exclude_none=True)
 async def get_plugin_schema(plugin_id: str, schema_id: str):
     """
     Returns a specific schema for a plugin.
