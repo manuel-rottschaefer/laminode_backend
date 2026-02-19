@@ -50,7 +50,8 @@ class ParameterQuantity(BaseModel):
     type: str
     unit: Optional[str] = None
     symbol: Optional[str] = None
-    options: Optional[List[str]] = None
+    # options is now a mapping of identifier->display title
+    options: Optional[Dict[str, str]] = None
 
 class CamExpressionRelation(BaseModel):
     target: str
