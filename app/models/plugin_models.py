@@ -1,5 +1,33 @@
-from typing import List, Optional, Dict
-from pydantic import BaseModel, Field, ConfigDict
+from typing import List, Optional, Dict, Any
+from pydantic import BaseModel, Field, ConfigDict, field_validator, model_validator
+from enum import Enum
+
+class QuantityType(str, Enum):
+    NUMERIC = "numeric"
+    CHOICE = "choice"
+    BOOLEAN = "boolean"
+    STRING = "string"
+    PERCENTAGE = "percentage"
+    RELATIVE = "relative"
+    CUSTOM = "custom"
+
+class QuantityDefinition(BaseModel):
+    id: str
+    type: QuantityType
+    title: Optional[str] = None
+    unit: Optional[str] = None
+    symbol: Optional[str] = None
+    meta: Optional[Dict[str, Any]] = None
+    default: Optional[Any] = None
+    fallback: Optional[Any] = None
+
+    @model_validator(mode='after')
+    def validate_quantity(self) -> 'QuantityDefinition':
+        if self.type in [QuantityType.PERCENTAGE, QuantityType.RELATIVE]:
+            if not self.meta or not self.meta.get("requiresReference"):
+                 raise ValueError(f"Quantity {self.id} of type '{self.type}' MUST have meta.requiresReference = True")
+        
+        return self
 
 class ApplicationInfo(BaseModel):
     appName: str
@@ -46,20 +74,13 @@ class SchemaManifest(BaseModel):
     targetAppName: Optional[str] = None
     targetAppSector: Optional[str] = None
 
-class ParameterQuantity(BaseModel):
-    type: str
-    unit: Optional[str] = None
-    symbol: Optional[str] = None
-    # options is now a mapping of identifier->display title
-    options: Optional[Dict[str, str]] = None
-
 class CamExpressionRelation(BaseModel):
     target: str
     expression: str
 
 class CamParameter(BaseModel):
     name: str
-    title: str
+    title: Optional[str] = None
     description: Optional[str] = None
     baseParam: Optional[str] = None
     category: Optional[str] = None
@@ -71,15 +92,25 @@ class CamParameter(BaseModel):
     maxThreshold: Optional[CamExpressionRelation] = None
     enabledCondition: Optional[CamExpressionRelation] = None
 
-    quantity: ParameterQuantity
+    quantityIds: List[str]
+    options: Optional[Dict[str, str]] = None
 
 class CamCategory(BaseModel):
     name: str
     title: str
     color: str
+    parent: Optional[str] = None
     role: str = "buildJob"
 
 class PluginSchema(BaseModel):
     manifest: SchemaManifest
+    quantities: Dict[str, QuantityDefinition]
     categories: Optional[List[CamCategory]] = None
     availableParameters: List[CamParameter]
+
+    @field_validator("quantities")
+    @classmethod
+    def quantities_not_empty(cls, v: Dict[str, QuantityDefinition]) -> Dict[str, QuantityDefinition]:
+        if not v:
+            raise ValueError("quantities mapping MUST be present and non-empty")
+        return v

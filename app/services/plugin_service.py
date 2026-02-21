@@ -22,8 +22,11 @@ class PluginService:
                         v_path = app_path / version
                         manifest_path = v_path / "manifest.json"
                         if manifest_path.exists():
-                            with open(manifest_path, 'r') as f:
-                                plugins.append(PluginManifest(**json.load(f)))
+                            try:
+                                with open(manifest_path, 'r') as f:
+                                    plugins.append(PluginManifest(**json.load(f)))
+                            except Exception as e:
+                                logger.error(f"Error parsing manifest in {v_path}: {e}")
 
         # Scan Sectors
         sector_dir = PLUGINS_ROOT / "sectors"
@@ -35,8 +38,11 @@ class PluginService:
                         v_path = sector_path / version
                         manifest_path = v_path / "manifest.json"
                         if manifest_path.exists():
-                            with open(manifest_path, 'r') as f:
-                                plugins.append(PluginManifest(**json.load(f)))
+                            try:
+                                with open(manifest_path, 'r') as f:
+                                    plugins.append(PluginManifest(**json.load(f)))
+                            except Exception as e:
+                                logger.error(f"Error parsing manifest in {v_path}: {e}")
         
         return plugins
 
@@ -96,8 +102,13 @@ class PluginService:
             logger.warning(f"Schema file not found in {base_path}")
             return None
             
-        with open(schema_path, 'r') as f:
-            return PluginSchema(**json.load(f))
+        try:
+            with open(schema_path, 'r') as f:
+                data = json.load(f)
+                return PluginSchema(**data)
+        except Exception as e:
+            logger.error(f"Error parsing schema {schema_id} for {plugin_id}: {str(e)}")
+            return None
 
     def get_adapter_path(self, plugin_id: str, schema_id: Optional[str] = None) -> Optional[Path]:
         logger.info(f"Fetching adapter for plugin: {plugin_id} (schema: {schema_id})")
