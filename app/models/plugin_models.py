@@ -57,6 +57,7 @@ class SchemaRef(BaseModel):
     id: str
     version: str
     releaseDate: str
+    name: Optional[str] = None
 
 class PluginManifest(BaseModel):
     pluginType: str  # 'application' or 'sector'

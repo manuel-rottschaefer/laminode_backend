@@ -24,7 +24,24 @@ class PluginService:
                         if manifest_path.exists():
                             try:
                                 with open(manifest_path, 'r') as f:
-                                    plugins.append(PluginManifest(**json.load(f)))
+                                    data = json.load(f)
+
+                                # Ensure each schema entry has a 'name' field so clients
+                                # (e.g. Flutter) don't receive null for required fields.
+                                for s in data.get('schemas', []):
+                                    if not s.get('name'):
+                                        schema_file = v_path / 'schemas' / s.get('id', '') / 'schema.json'
+                                        if schema_file.exists():
+                                            try:
+                                                with open(schema_file, 'r') as sf:
+                                                    sdata = json.load(sf)
+                                                    s['name'] = sdata.get('name') or s.get('version') or 'Untitled Schema'
+                                            except Exception:
+                                                s['name'] = s.get('version') or 'Untitled Schema'
+                                        else:
+                                            s['name'] = s.get('version') or 'Untitled Schema'
+
+                                plugins.append(PluginManifest(**data))
                             except Exception as e:
                                 logger.error(f"Error parsing manifest in {v_path}: {e}")
 
@@ -40,7 +57,23 @@ class PluginService:
                         if manifest_path.exists():
                             try:
                                 with open(manifest_path, 'r') as f:
-                                    plugins.append(PluginManifest(**json.load(f)))
+                                    data = json.load(f)
+
+                                # Enrich schema entries with a 'name' field when missing
+                                for s in data.get('schemas', []):
+                                    if not s.get('name'):
+                                        schema_file = v_path / 'schemas' / s.get('id', '') / 'schema.json'
+                                        if schema_file.exists():
+                                            try:
+                                                with open(schema_file, 'r') as sf:
+                                                    sdata = json.load(sf)
+                                                    s['name'] = sdata.get('name') or s.get('version') or 'Untitled Schema'
+                                            except Exception:
+                                                s['name'] = s.get('version') or 'Untitled Schema'
+                                        else:
+                                            s['name'] = s.get('version') or 'Untitled Schema'
+
+                                plugins.append(PluginManifest(**data))
                             except Exception as e:
                                 logger.error(f"Error parsing manifest in {v_path}: {e}")
         
