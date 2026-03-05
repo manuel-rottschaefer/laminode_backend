@@ -2,7 +2,7 @@ import os
 import json
 from typing import List, Optional
 from pathlib import Path
-from ..models.plugin_models import PluginManifest, PluginSchema
+from ..models.plugin_models import PluginManifest, PluginSchema, CamExpressionRelation
 from ..core.logging_config import logger
 
 PLUGINS_ROOT = Path("/home/manuel/Documents/LamiNode/laminode_plugins")
@@ -138,7 +138,30 @@ class PluginService:
         try:
             with open(schema_path, 'r') as f:
                 data = json.load(f)
-                return PluginSchema(**data)
+                schema = PluginSchema(**data)
+
+                # Normalize defaults for choice-type parameters: ensure evaluated
+                # default is one of the option keys; otherwise fall back to first key.
+                def _coerce_choice_defaults(s: PluginSchema) -> None:
+                    for p in s.availableParameters:
+                        if not p.options:
+                            continue
+                        if 'choice' not in p.quantityIds:
+                            continue
+
+                        # Do NOT modify or sanitize the original expression here —
+                        # leave evaluation to the engine. Only provide a fallback
+                        # default when no defaultValue is present at all.
+                        if not p.defaultValue:
+                            try:
+                                first_key = next(iter(p.options.keys()))
+                                p.defaultValue = CamExpressionRelation(target=p.name, expression=first_key)
+                            except Exception:
+                                # If options is empty or unexpected, skip
+                                pass
+
+                _coerce_choice_defaults(schema)
+                return schema
         except Exception as e:
             logger.error(f"Error parsing schema {schema_id} for {plugin_id}: {str(e)}")
             return None
