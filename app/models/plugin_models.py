@@ -2,6 +2,7 @@ from typing import List, Optional, Dict, Any
 from pydantic import BaseModel, Field, ConfigDict, field_validator, model_validator
 from enum import Enum
 
+
 class QuantityType(str, Enum):
     NUMERIC = "numeric"
     CHOICE = "choice"
@@ -10,6 +11,7 @@ class QuantityType(str, Enum):
     PERCENTAGE = "percentage"
     RELATIVE = "relative"
     CUSTOM = "custom"
+
 
 class QuantityDefinition(BaseModel):
     id: str
@@ -25,9 +27,11 @@ class QuantityDefinition(BaseModel):
     def validate_quantity(self) -> 'QuantityDefinition':
         if self.type in [QuantityType.PERCENTAGE, QuantityType.RELATIVE]:
             if not self.meta or not self.meta.get("requiresReference"):
-                 raise ValueError(f"Quantity {self.id} of type '{self.type}' MUST have meta.requiresReference = True")
-        
+                raise ValueError(
+                    f"Quantity {self.id} of type '{self.type}' MUST have meta.requiresReference = True")
+
         return self
+
 
 class ApplicationInfo(BaseModel):
     appName: str
@@ -36,13 +40,16 @@ class ApplicationInfo(BaseModel):
     website: str
     sector: str
 
+
 class TargetAppVersionRange(BaseModel):
     minVersion: str
     maxVersion: str
 
+
 class FileTypes(BaseModel):
     profileImportBucket: str
     gcodeExportBucket: str
+
 
 class PluginInfo(BaseModel):
     pluginID: str
@@ -53,11 +60,13 @@ class PluginInfo(BaseModel):
     sector: str
     fileTypes: Optional[FileTypes] = None
 
+
 class SchemaRef(BaseModel):
     id: str
     version: str
     releaseDate: str
     name: Optional[str] = None
+
 
 class PluginManifest(BaseModel):
     pluginType: str  # 'application' or 'sector'
@@ -67,17 +76,20 @@ class PluginManifest(BaseModel):
     plugin: PluginInfo
     schemas: List[SchemaRef]
 
+
 class SchemaManifest(BaseModel):
     schemaType: str
     schemaVersion: str
     schemaAuthors: List[str]
     lastUpdated: str
-    targetAppName: Optional[str] = None
+    targetappName: Optional[str] = None
     targetAppSector: Optional[str] = None
+
 
 class CamExpressionRelation(BaseModel):
     target: str
     expression: str
+
 
 class CamParameter(BaseModel):
     name: str
@@ -85,9 +97,9 @@ class CamParameter(BaseModel):
     description: Optional[str] = None
     baseParam: Optional[str] = None
     category: Optional[str] = None
-    
+
     ancestors: List[str] = []
-    
+
     defaultValue: Optional[CamExpressionRelation] = None
     minThreshold: Optional[CamExpressionRelation] = None
     maxThreshold: Optional[CamExpressionRelation] = None
@@ -96,12 +108,14 @@ class CamParameter(BaseModel):
     quantityIds: List[str]
     options: Optional[Dict[str, str]] = None
 
+
 class CamCategory(BaseModel):
     name: str
     title: str
     color: str
     parent: Optional[str] = None
     role: str = "buildJob"
+
 
 class PluginSchema(BaseModel):
     manifest: SchemaManifest
@@ -113,5 +127,6 @@ class PluginSchema(BaseModel):
     @classmethod
     def quantities_not_empty(cls, v: Dict[str, QuantityDefinition]) -> Dict[str, QuantityDefinition]:
         if not v:
-            raise ValueError("quantities mapping MUST be present and non-empty")
+            raise ValueError(
+                "quantities mapping MUST be present and non-empty")
         return v
